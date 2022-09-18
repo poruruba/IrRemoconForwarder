@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; style-src * 'unsafe-inline'; media-src *; img-src * data: content: blob:;">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="css/start.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spinkit/2.0.1/spinkit.min.css" />
+  <script src="js/methods_bootstrap.js"></script>
+  <script src="js/components_bootstrap.js"></script>
+  <script src="js/components_utils.js"></script>
+  <script src="js/vue_utils.js"></script>
+  <script src="js/gql_utils.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/vconsole/dist/vconsole.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+
+  <title>赤外線リモコン 中継器</title>
+</head>
+<body>
+<!--
+    <div id="loader-background">
+      <div class="sk-plane sk-center"></div>
+    </div>
+-->
+    <div id="top" class="container">
+        <div class="jumbotron">
+          <h2>赤外線リモコン 中継器</h2>
+        </div>
+
+        <table class="table table-striped">
+          <thead>
+            <tr><th>id</th><th>name</th><th>action</th><th>ir</th><th>変更</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in irremocon_list">
+              <td>{{item.id}}</td><td>{{item.name}}</td><td>
+                <span v-if="!item.action"></span>
+                <span v-else-if="item.action.type=='switchbot'">
+                  <label>commandType</label> {{item.action.commandType}}<br>
+                  <label>deviceName</label> {{item.action.deviceName}}<br>
+                  <label>deviceId</label> {{item.action.deviceId}}<br>
+                  <label>command</label> {{item.action.command}}<br>
+                </span>
+                <span v-else-if="item.action.type=='http'">
+                  <label>methodType</label> {{item.action.methodType}}<br>
+                  <label>url</label> {{item.action.url}}<br>
+                </span>
+                <span v-else-if="item.action.type=='udp'">
+                  <label>host</label> {{item.action.host}}<br>
+                  <label>port</label> {{item.action.port}}<br>
+                </span>
+              </td>
+              <td>
+                <label>address</label> {{item.ir.address}}<br>
+                <label>command</label> {{item.ir.command}}<br>
+                <label>value</label> {{item.ir.value}}<br>
+              </td><td>
+                <button class="btn btn-default btn-sm" v-on:click="irremocon_update_start(index)">変更</button>
+                <button class="btn btn-default btn-sm" v-on:click="irremocon_edit_ir(index)">ir変更</button>
+                <button class="btn btn-default btn-sm" v-on:click="irremocon_delete(index)">削除</button>
+              </td>
+            </tr>
+        </table>
+        <div class="form-inline">
+          <label>id</label> <select class="form-control" v-model="irremocon_create_id">
+            <option v-for="(item, index) in button_list" v-bind:value="item">{{item}}</option>
+          </select>
+          <button class="btn btn-default" v-on:click="irremocon_create_call">新規登録</button>
+        </div>
+
+        <div class="modal fade" id="edit_dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 class="modal-title">変更</h3>
+              </div>
+              <div class="modal-body">
+                <div class="form-inline">
+                  <label>id</label> {{irremocon_update.id}}<br>
+                  <label>name</label> <input type="text" class="form-control" v-model="irremocon_update.name"><br>
+                  <label>type</label> <select class="form-control" v-model="irremocon_update.action.type">
+                    <option value="switchbot">switchbot</option>
+                    <option value="http">http</option>
+                    <option value="udp">udp</option>
+                  </select>
+                  <br>
+                  <span v-show="irremocon_update.action.type=='switchbot'">
+                    <label>deviceId</label> <select class="form-control" v-model="irremocon_update.action.deviceId">
+                      <option v-for="(item, index) in switchbot_list" v-bind:value="item.deviceId">{{item.deviceName}}</option>
+                    </select><br>
+                    <label>commandType</label> <select class="form-control" v-model="irremocon_update.action.commandType">
+                      <option value="command">command</option>
+                      <option value="customize">customize</option>
+                    </select><br>
+                    <label>command</label>
+                    <select v-if="irremocon_update.action.commandType=='command'" class="form-control" v-model="irremocon_update.action.command">
+                      <option value="turnOn">turnOn</option>
+                      <option value="turnOff">turnOff</option>
+                    </select>
+                    <input v-else type="text" class="form-control" v-model="irremocon_update.action.command">
+                  </span>
+                  <span v-show="irremocon_update.action.type=='http'">
+                    <label>methodType</label> <select class="form-control" v-model="irremocon_update.action.methodType">
+                      <option value="post">post</option>
+                      <option value="get">get</option>
+                    </select>
+                    <label>url</label> <input type="text" class="form-control" v-model="irremocon_update.action.url">
+                  </span>
+                  <span v-show="irremocon_update.action.type=='udp'">
+                    <label>host</label> <input type="text" class="form-control" v-model="irremocon_update.action.host">
+                    <label>port</label> <input type="number" class="form-control" v-model.number="irremocon_update.action.port">
+                  </span>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-default" v-on:click="irremocon_update_call">変更</button>
+                <button class="btn btn-default" v-on:click="dialog_close('#edit_dialog')">キャンセル</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- for progress-dialog -->
+        <progress-dialog v-bind:title="progress_title"></progress-dialog>
+    </div>
+
+    <script src="js/start.js"></script>
+</body>
