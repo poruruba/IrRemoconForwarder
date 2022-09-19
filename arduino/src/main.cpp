@@ -252,7 +252,7 @@ static long wifi_try_connect(bool infinit_loop)
 {
   long ret = -1;
   do{
-    ret = wifi_connect(WIFI_PASSWORD, WIFI_PASSWORD, WIFI_TIMEOUT);
+    ret = wifi_connect(WIFI_SSID, WIFI_PASSWORD, WIFI_TIMEOUT);
     if( ret == 0 )
       return ret;
 
